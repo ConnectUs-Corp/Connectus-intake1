@@ -1540,15 +1540,15 @@ const COL_SELL   = (typeof window.COL_SELL   !== 'undefined') ? window.COL_SELL 
 
   // Pro Services (per device) as its own line item
   const svcEnabled = !!document.getElementById('svcEnabled')?.checked;
-  const svcSku = (document.getElementById('svcSKU')?.value || '').toString().trim();
   const svcQty = (typeof getCurrentRowQty === 'function') ? getCurrentRowQty() : 0;
   const svcPrice = (document.getElementById('svcCostPer')?.value || '').toString().trim();
-  if (svcEnabled && svcSku && svcQty > 0) {
+  const svcSkuForExport = 'proservices_tier1_other';
+  if (svcEnabled && svcQty > 0) {
     rows.push([
       '',                  // id
       docNo,               // No.
       customer,            // Customer
-      svcSku,              // Item
+      svcSkuForExport,     // Item
       'Part',              // ItemType
       '',                  // Line Instruction
       svcQty,              // Quantity
