@@ -1538,6 +1538,26 @@ const COL_SELL   = (typeof window.COL_SELL   !== 'undefined') ? window.COL_SELL 
     });
   }
 
+  // Pro Services (per device) as its own line item
+  const svcEnabled = !!document.getElementById('svcEnabled')?.checked;
+  const svcSku = (document.getElementById('svcSKU')?.value || '').toString().trim();
+  const svcQty = (typeof getCurrentRowQty === 'function') ? getCurrentRowQty() : 0;
+  const svcPrice = (document.getElementById('svcCostPer')?.value || '').toString().trim();
+  if (svcEnabled && svcSku && svcQty > 0) {
+    rows.push([
+      '',                  // id
+      docNo,               // No.
+      customer,            // Customer
+      svcSku,              // Item
+      'Part',              // ItemType
+      '',                  // Line Instruction
+      svcQty,              // Quantity
+      svcPrice,            // Price (per device)
+      '',                  // Act Payout $
+      tranType             // Tran Type
+    ]);
+  }
+
   const headers = ['id','No.','Customer','Item','ItemType','Line Instruction','Quantity','Price','Act Payout $','Tran Type']; // 👈 NEW header
   const lines = rows.map(r => r.map(csvEscape).join(',')).join('\n');
   return headers.join(',') + '\n' + lines;
