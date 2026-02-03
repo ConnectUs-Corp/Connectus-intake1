@@ -4017,7 +4017,8 @@ function recalcServices(){
   setVal('svcCostTotal', (per*qty).toFixed(2));
   setVal('svcSaleTotal', (salePer*qty).toFixed(2));
   if(enabled && !document.getElementById('svcSKU').value){
-    document.getElementById('svcSKU').value=`PROSERV-TIER-${parseInt(document.getElementById('svcTier').value||'0',10)}`;
+    const t = parseInt(document.getElementById('svcTier').value||'0',10);
+    document.getElementById('svcSKU').value = `proservices_tier${isNaN(t) ? 0 : t}_other`;
   }
   refreshTotals();
 }
