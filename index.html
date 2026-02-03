@@ -780,10 +780,10 @@ City, State ZIP"></textarea>
     <section class="three">
       <label>Minutes (per device)</label>
       <input id="svcMinutes" type="number" min="1" value="5" />
-      <label style="margin-top:10px">Cost per device ($0.80/min)</label>
-      <input id="svcCostPer" type="number" step="0.01" readonly />
       <label style="margin-top:10px">Total Services Cost</label>
       <input id="svcCostTotal" type="number" step="0.01" readonly />
+      <label style="margin-top:10px">Total Sales Price</label>
+      <input id="svcSaleTotal" type="number" step="0.01" readonly />
     </section>
   </div>
   <div class="tiny">Tier 0 defaults to 5 minutes. Tiers 1–4 auto-set minutes = tier × 15.</div>
@@ -1541,8 +1541,9 @@ const COL_SELL   = (typeof window.COL_SELL   !== 'undefined') ? window.COL_SELL 
   // Pro Services (per device) as its own line item
   const svcEnabled = !!document.getElementById('svcEnabled')?.checked;
   const svcQty = (typeof getCurrentRowQty === 'function') ? getCurrentRowQty() : 0;
-  const svcPrice = (document.getElementById('svcCostPer')?.value || '').toString().trim();
-  const svcSkuForExport = 'proservices_tier1_other';
+  const svcPrice = (document.getElementById('svcSaleTotal')?.value || '').toString().trim();
+  const tierVal = parseInt(document.getElementById('svcTier')?.value || '0', 10);
+  const svcSkuForExport = `proservices_tier${isNaN(tierVal) ? 0 : tierVal}_other`;
   if (svcEnabled && svcQty > 0) {
     rows.push([
       '',                  // id
@@ -1702,6 +1703,7 @@ function openMailto(url){
 const API_BASE = '/api';
 const TAX_RATE = 0.08;
 const RATE_PER_MIN = 0.80;
+const RATE_SALE_PER_MIN = 1.00;
 const SSP_INVITE_SUBJECT = "Set up your ConnectUS Self-Service Portal (SSP)";
 
 // ConnectUS carrier accounts for auto-fill
@@ -3585,6 +3587,7 @@ function applyClonedOrder(){
       document.getElementById('svcEnabled').checked = !!l.services.enabled;
       document.getElementById('svcTier').value = String(l.services.tier ?? 0);
       tierToMinutes(); recalcServices();
+      if(l.services.saleTotal !== undefined) setVal('svcSaleTotal', l.services.saleTotal);
     }
 
     if(l.sim){
@@ -3933,7 +3936,12 @@ function addRow(prefill){
     showSubtabs();
     if(prefill.accessory){ setVal('accSku',prefill.accessory.sku); setVal('accDesc',prefill.accessory.desc); setVal('accQty',prefill.accessory.qty); setVal('accSell',prefill.accessory.sell); }
     if(prefill.insurance){ selectByTextExact('insPlan',prefill.insurance.plan); selectByTextExact('insDed',prefill.insurance.ded); selectByTextExact('insTerm',prefill.insurance.term); setVal('insSell',prefill.insurance.sell); }
-    if(prefill.services){ document.getElementById('svcEnabled').checked=!!prefill.services.enabled; document.getElementById('svcTier').value=String(prefill.services.tier||0); tierToMinutes(); recalcServices(); }
+    if(prefill.services){
+      document.getElementById('svcEnabled').checked=!!prefill.services.enabled;
+      document.getElementById('svcTier').value=String(prefill.services.tier||0);
+      tierToMinutes(); recalcServices();
+      if(prefill.services.saleTotal !== undefined) setVal('svcSaleTotal', prefill.services.saleTotal);
+    }
     if(prefill.sim){ setVal('simCard',prefill.sim.card); setVal('pairingOption',prefill.sim.pairing); setVal('simHandling',prefill.sim.handling); setVal('simQuestionnaire',prefill.sim.questionnaire); }
     if(prefill.lic){ setVal('licVendor',prefill.lic.vendor); setVal('licDuration',prefill.lic.duration); setVal('licProrated',prefill.lic.prorated); setVal('licKey',prefill.lic.key); setVal('licContact',prefill.lic.contact); }
   }
@@ -3998,17 +4006,19 @@ function tierToMinutes(){
   const tier=parseInt(document.getElementById('svcTier').value||'0',10);
   const minutes = tier===0 ? 5 : tier*15;
   document.getElementById('svcMinutes').value = minutes;
-  document.getElementById('svcSKU').value = `PROSERV-TIER-${tier}`;
+  document.getElementById('svcSKU').value = `proservices_tier${isNaN(tier) ? 0 : tier}_other`;
 }
 function recalcServices(){
   const enabled = document.getElementById('svcEnabled').checked;
   const minutes = parseFloat(document.getElementById('svcMinutes').value||'0');
   const per = enabled ? minutes * RATE_PER_MIN : 0;
-  setVal('svcCostPer', per.toFixed(2));
+  const salePer = enabled ? minutes * RATE_SALE_PER_MIN : 0;
   const qty = getCurrentRowQty();
   setVal('svcCostTotal', (per*qty).toFixed(2));
+  setVal('svcSaleTotal', (salePer*qty).toFixed(2));
   if(enabled && !document.getElementById('svcSKU').value){
-    document.getElementById('svcSKU').value=`PROSERV-TIER-${parseInt(document.getElementById('svcTier').value||'0',10)}`;
+    const t = parseInt(document.getElementById('svcTier').value||'0',10);
+    document.getElementById('svcSKU').value = `proservices_tier${isNaN(t) ? 0 : t}_other`;
   }
   refreshTotals();
 }
@@ -4030,8 +4040,8 @@ function computeTotals(){
   const accTotal = accQty*accSell*qty;
 
   const svcEnabled=document.getElementById('svcEnabled').checked;
-  const svcPer=parseNum(val('svcCostPer'));
-  const svcTotal = svcEnabled ? svcPer*qty : 0;
+  const svcMinutes=parseNum(val('svcMinutes'));
+  const svcTotal = svcEnabled ? (svcMinutes * RATE_SALE_PER_MIN * qty) : 0;
 
   const insSell=parseNum(val('insSell'));
   const insTotal = insSell*qty;
@@ -4094,7 +4104,7 @@ function buildSummary(){
   parts.push('');
   parts.push('ACCESSORY / SERVICES / INSURANCE (most-recent item)');
   parts.push(`- Acc: Brick+Cable ${document.getElementById('bcInclude').checked?'Yes':'No'} | SKU ${val('accSku')||'—'} | ${val('accDesc')||'—'} | Qty/Unit ${val('accQty')||0} | Sell $${val('accSell')||'—'}`);
-  parts.push(`- Svc: Included ${bool('svcEnabled')?'Yes':'No'} | Tier ${val('svcTier')||'0'} | Minutes ${val('svcMinutes')||'0'} | SKU ${val('svcSKU')||'—'} | $/device ${val('svcCostPer')||'0.00'}`);
+  parts.push(`- Svc: Included ${bool('svcEnabled')?'Yes':'No'} | Tier ${val('svcTier')||'0'} | Minutes ${val('svcMinutes')||'0'} | SKU ${val('svcSKU')||'—'} | Sale Total ${val('svcSaleTotal')||'0.00'}`);
   parts.push(`- Ins: Plan ${val('insPlan')||'None'} | Ded ${val('insDed')||'—'} | Term ${val('insTerm')||'—'} | Sell $${val('insSell')||'—'}`);
   parts.push('');
   parts.push('SIM / PAIRING (most-recent item)');
@@ -4168,7 +4178,7 @@ function buildIntakePayload(){
         tier: val('svcTier'),
         minutes: val('svcMinutes'),
         sku: val('svcSKU'),
-        costPer: val('svcCostPer'),
+        saleTotal: val('svcSaleTotal'),
         total: val('svcCostTotal')
       },
       notes: val('mdmNotes')
@@ -4300,7 +4310,8 @@ function buildCSV(){
 
   const services = [
     ['Services Included', bool('svcEnabled') ? 'Yes' : 'No'], ['Services Tier', val('svcTier')],
-    ['Services Minutes (per device)', val('svcMinutes')], ['Services SKU', val('svcSKU')], ['Services $/device', val('svcCostPer')], ['Services Total', val('svcCostTotal')]
+    ['Services Minutes (per device)', val('svcMinutes')], ['Services SKU', val('svcSKU')],
+    ['Services Cost Total', val('svcCostTotal')], ['Services Sale Total', val('svcSaleTotal')]
   ];
 
   const insurance = [
