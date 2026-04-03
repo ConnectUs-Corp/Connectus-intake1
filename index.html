@@ -527,7 +527,7 @@ window.addEventListener('DOMContentLoaded', function initEmailDrawerAutoClose(){
     <option value="4">Tier 4 (≤ 60 min)</option>
   </select>
   <label style="margin-left:12px">SKU</label>
-  <input id="techZoneSKU" readonly style="margin-left:6px; width:200px; background:#f0f0f0" value="proservices_tier0_other" />
+  <input id="techZoneSKU" readonly style="margin-left:6px; width:200px; background:#f0f0f0" value="ProServices_tier0_phone" />
 </div>
 
 
@@ -3596,7 +3596,7 @@ function applyClonedOrder(){
     if (so.techZoneTier !== undefined) {
       document.getElementById('techZoneTier').value = String(so.techZoneTier);
       const t = parseInt(so.techZoneTier || '0', 10);
-      document.getElementById('techZoneSKU').value = `proservices_tier${isNaN(t) ? 0 : t}_other`;
+      document.getElementById('techZoneSKU').value = `ProServices_tier${isNaN(t) ? 0 : t}_phone`;
     }
   }
   if (apEl) apEl.checked = !!so.allowPartial;
@@ -4769,7 +4769,7 @@ document.getElementById('btnSubmitIntake')?.addEventListener('click', async ()=>
   });
   document.getElementById('techZoneTier').addEventListener('change', function(){
     const t = parseInt(this.value || '0', 10);
-    document.getElementById('techZoneSKU').value = `proservices_tier${isNaN(t) ? 0 : t}_other`;
+    document.getElementById('techZoneSKU').value = `ProServices_tier${isNaN(t) ? 0 : t}_phone`;
   });
 
   // Ensure CSV preview is primed
