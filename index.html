@@ -517,6 +517,18 @@ window.addEventListener('DOMContentLoaded', function initEmailDrawerAutoClose(){
 <div style="margin-top:10px">
   <label class="chip"><input type="checkbox" id="techZoneReq"> Tech Zone Required</label>
 </div>
+<div id="techZoneTierWrap" style="display:none; margin-top:8px; margin-left:4px">
+  <label>Tech Zone Tier</label>
+  <select id="techZoneTier" style="margin-left:6px">
+    <option value="0">Tier 0 (under ~5 min)</option>
+    <option value="1">Tier 1 (≤ 15 min)</option>
+    <option value="2">Tier 2 (≤ 30 min)</option>
+    <option value="3">Tier 3 (≤ 45 min)</option>
+    <option value="4">Tier 4 (≤ 60 min)</option>
+  </select>
+  <label style="margin-left:12px">SKU</label>
+  <input id="techZoneSKU" readonly style="margin-left:6px; width:200px; background:#f0f0f0" value="proservices_tier0_other" />
+</div>
 
 
 <div style="margin-top:10px">
@@ -1556,6 +1568,24 @@ const COL_SELL   = (typeof window.COL_SELL   !== 'undefined') ? window.COL_SELL 
       svcPrice,            // Price (per device)
       '',                  // Act Payout $
       tranType             // Tran Type
+    ]);
+  }
+
+  // Tech Zone tier SKU as its own line item (qty 1, no price)
+  const tzChecked = !!document.getElementById('techZoneReq')?.checked;
+  const tzSku = (document.getElementById('techZoneSKU')?.value || '').trim();
+  if (tzChecked && tzSku) {
+    rows.push([
+      '',          // id
+      docNo,       // No.
+      customer,    // Customer
+      tzSku,       // Item
+      'Part',      // ItemType
+      'Tech Zone', // Line Instruction
+      1,           // Quantity
+      '',          // Price
+      '',          // Act Payout $
+      tranType     // Tran Type
     ]);
   }
 
@@ -3560,7 +3590,15 @@ function applyClonedOrder(){
   const apEl = document.getElementById('allowPartial');
   const bsEl = document.getElementById('blindShip');
 
-  if (tzEl) tzEl.checked = !!so.techZoneRequired;
+  if (tzEl) {
+    tzEl.checked = !!so.techZoneRequired;
+    document.getElementById('techZoneTierWrap').style.display = tzEl.checked ? '' : 'none';
+    if (so.techZoneTier !== undefined) {
+      document.getElementById('techZoneTier').value = String(so.techZoneTier);
+      const t = parseInt(so.techZoneTier || '0', 10);
+      document.getElementById('techZoneSKU').value = `proservices_tier${isNaN(t) ? 0 : t}_other`;
+    }
+  }
   if (apEl) apEl.checked = !!so.allowPartial;
   if (bsEl) bsEl.checked = !!so.blindShip;
 
@@ -4097,6 +4135,7 @@ function buildSummary(){
   parts.push(`- ${val('shipCompany')} — ${val('shipContact')} (${val('shipPhone')}) <${val('shipEmail')}> ${bool('resShip')?'[Residence]':''}`);
   parts.push(`- ${val('shipStreet')} ${val('shipSuite')}, ${val('shipCity')}, ${val('shipState')} ${val('shipZip')}`);
   parts.push(`- Options: Pay ${val('shipPay')||'—'}; Speed ${val('shipSpeed')||'—'}; Short Ship ${val('shortShip')||'—'}; Req ${val('reqShipDate')||'—'}; Expected ${val('expShipDate')||'—'}`);
+  if(bool('techZoneReq')) parts.push(`- Tech Zone: Required | Tier SKU: ${val('techZoneSKU')||'—'}`);
   parts.push('');
   parts.push('LINES');
   if(lines.length===0){ parts.push('  (none)'); }
@@ -4246,6 +4285,7 @@ function buildCSV(){
     ['Shipping Payment Method', getSelText('shipPayMethod')],
     ['Freight Type', getSelText('freightType')],
     ['Tech Zone Required', bool('techZoneReq') ? 'Yes' : 'No'],
+    ['Tech Zone Tier SKU', bool('techZoneReq') ? (val('techZoneSKU') || '—') : 'N/A'],
     ['Allow Partial Ship', bool('allowPartial') ? 'Yes' : 'No'],
     ['Blind Ship', bool('blindShip') ? 'Yes' : 'No'],
 
@@ -4722,6 +4762,15 @@ document.getElementById('btnSubmitIntake')?.addEventListener('click', async ()=>
   addRow(); // one editable row
   if(document.querySelector('#itemsBody tr')){ showSubtabs(); document.getElementById('totalsBox').style.display=''; }
   tierToMinutes(); recalcServices();
+
+  // Tech Zone tier dropdown toggle + SKU auto-gen
+  document.getElementById('techZoneReq').addEventListener('change', function(){
+    document.getElementById('techZoneTierWrap').style.display = this.checked ? '' : 'none';
+  });
+  document.getElementById('techZoneTier').addEventListener('change', function(){
+    const t = parseInt(this.value || '0', 10);
+    document.getElementById('techZoneSKU').value = `proservices_tier${isNaN(t) ? 0 : t}_other`;
+  });
 
   // Ensure CSV preview is primed
   refreshCSVPreview();
@@ -5228,6 +5277,12 @@ if (itemsBody && typeof draft.itemsHTML === 'string') {
       });
     });
   }
+}
+
+// Sync Tech Zone tier dropdown visibility after restore
+const tzRestoredEl = document.getElementById('techZoneReq');
+if (tzRestoredEl) {
+  document.getElementById('techZoneTierWrap').style.display = tzRestoredEl.checked ? '' : 'none';
 }
 
 // Ensure intake UI is visible
