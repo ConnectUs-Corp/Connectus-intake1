@@ -219,9 +219,8 @@
             <option>Peter Occorso </option>
             <option>Lucas Currin</option>
             <option>Max Mann</option>
-            <option>John Tropeano</option>
             <option>Jerrad Martin</option>
-            <option>Chris Samaras</option>
+            <option>Dominic Matamis</option>
           </select>
           <label style="margin-top:10px">Template Editor</label>
           <textarea id="repTemplateText" rows="12" placeholder="Template text with {{ Customer First Name }} and {{Current Email}} placeholders"></textarea>
@@ -2717,6 +2716,33 @@ With Warmest Regards,
 Max Mann
 
  `,
+  "Dominic Matamis": `  Hello {{ Customer First Name}}, 
+
+We are excited to share that we have created a self service customer portal to make engaging with ConnectUs an easier and more seamless experience. 
+
+From this portal you will be able to: 
+View Order Statuses See order historyView Tracking InformationRetrieve IMEI & Sim Information (When applicable)Manage Billing & Shipping AddressesView & download invoicesAnd More! 
+
+Click here to create your user name and password:  https://connectuscorp.com/my-account/?salep-rep=dominic-matamis 
+
+Your email will serve as the admin for this account. You can add additional users once you register. If you would like to change the admin email, please email me. 
+
+This is only the beginning! In the not so distant future, you will be able to place orders directly  from the portal which will save you time and provide you information you need in real time. 
+
+Our goal is to save you time and provide you the information you need on-demand. 
+
+We welcome you to provide any feedback you would like to see for future improvements or features. We will continually strive to improve your interactions with ConnectUs to make doing business with us an enjoyable experience. 
+
+Further instructions to follow once your account is created. 
+
+If we can help in any way, please do not hesitate to reach out. 
+
+Your business is greatly appreciated!
+
+With Warmest Regards,
+Dominic Matamis
+
+ `,
   "John Tropeano": `  Hello {{ Customer First Name}}, 
 
 We are excited to share that we have created a self service customer portal to make engaging with ConnectUs an easier and more seamless experience. 
@@ -2916,17 +2942,37 @@ function loadReps(){
       {name:"Peter Occorso", email:"peter.occorso@connectuscorp.com", slug:"peter-occorso", template:BASE_TEMPLATES["Peter Occorso"]},
       {name:"Lucas Currin", email:"lucas.currin@connectuscorp.com", slug:"lucas-currin", template:BASE_TEMPLATES["Lucas Currin"]},
       {name:"Max Mann", email:"max.mann@connectuscorp.com", slug:"max-mann", template:BASE_TEMPLATES["Max Mann"]},
-      {name:"John Tropeano", email:"john.tropeano@connectuscorp.com", slug:"john-tropeano", template:BASE_TEMPLATES["John Tropeano"]},
-      {name:"Greg Weichert", email:"greg.weichert@connectuscorp.com", slug:"Greg Weichert", template:BASE_TEMPLATES["Greg Weichert"]},
-      {name:"Jerrad Martin", email:"jerrad.martin@connectuscorp.com", slug:"jerrad-martin", template:BASE_TEMPLATES["Jerrad Martin"]}
+      {name:"Jerrad Martin", email:"jerrad.martin@connectuscorp.com", slug:"jerrad-martin", template:BASE_TEMPLATES["Jerrad Martin"]},
+      {name:"Dominic Matamis", email:"dominic.matamis@connectuscorp.com", slug:"dominic-matamis", template:BASE_TEMPLATES["Dominic Matamis"]}
     ];
     localStorage.setItem(LS_REPS_KEY, JSON.stringify(reps));
   }
-  // Ensure Jerrad is present even if localStorage already existed
+  // Apply roster migrations to existing browser storage.
+  const originalCount = reps.length;
+  reps = reps.filter(r => !["John Tropeano", "Greg Weichert"].includes(r.name));
+  let changed = reps.length !== originalCount;
   if(!reps.find(r=>r.name==="Jerrad Martin")){
     reps.push({name:"Jerrad Martin", email:"jerrad.martin@connectuscorp.com", slug:"jerrad-martin", template:BASE_TEMPLATES["Jerrad Martin"]});
-    localStorage.setItem(LS_REPS_KEY, JSON.stringify(reps));
+    changed = true;
   }
+  const dominic = reps.find(r=>r.name==="Dominic Matamis");
+  if(!dominic){
+    reps.push({name:"Dominic Matamis", email:"dominic.matamis@connectuscorp.com", slug:"dominic-matamis", template:BASE_TEMPLATES["Dominic Matamis"]});
+    changed = true;
+  }else{
+    const nextTemplate = dominic.template || BASE_TEMPLATES["Dominic Matamis"];
+    if(
+      dominic.email !== "dominic.matamis@connectuscorp.com" ||
+      dominic.slug !== "dominic-matamis" ||
+      dominic.template !== nextTemplate
+    ){
+      dominic.email = "dominic.matamis@connectuscorp.com";
+      dominic.slug = "dominic-matamis";
+      dominic.template = nextTemplate;
+      changed = true;
+    }
+  }
+  if(changed) localStorage.setItem(LS_REPS_KEY, JSON.stringify(reps));
   return reps;
 }
 function saveReps(reps){ localStorage.setItem(LS_REPS_KEY, JSON.stringify(reps||[])); }
