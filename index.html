@@ -2651,7 +2651,7 @@ We are excited to share that we have created a self service customer portal to m
 From this portal you will be able to: 
 View Order Statuses See order historyView Tracking InformationRetrieve IMEI & Sim Information (When applicable)Manage Billing & Shipping AddressesView & download invoicesAnd More! 
 
-Click here to create your user name and password:  https://connectuscorp.com/my-account/?salep-rep=chris-samaras 
+Click here to create your user name and password:  https://connectuscorp.com/my-account/?sales-rep=chris-samaras 
 
 Your email will serve as the admin for this account. You can add additional users once you register. If you would like to change the admin email, please email me. 
 
@@ -2677,7 +2677,7 @@ We are excited to share that we have created a self service customer portal to m
 From this portal you will be able to: 
 View Order Statuses See order historyView Tracking InformationRetrieve IMEI & Sim Information (When applicable)Manage Billing & Shipping AddressesView & download invoicesAnd More! 
 
-Click here to create your user name and password:  https://connectuscorp.com/my-account/?salep-rep=peter-occorso 
+Click here to create your user name and password:  https://connectuscorp.com/my-account/?sales-rep=peter-occorso 
 
 Your email will serve as the admin for this account. You can add additional users once you register. If you would like to change the admin email, please email me. 
 
@@ -2703,7 +2703,7 @@ We are excited to share that we have created a self service customer portal to m
 From this portal you will be able to: 
 View Order Statuses See order historyView Tracking InformationRetrieve IMEI & Sim Information (When applicable)Manage Billing & Shipping AddressesView & download invoicesAnd More! 
 
-Click here to create your user name and password:  https://connectuscorp.com/my-account/?salep-rep=lucas-currin 
+Click here to create your user name and password:  https://connectuscorp.com/my-account/?sales-rep=lucas-currin 
 
 Your email will serve as the admin for this account. You can add additional users once you register. If you would like to change the admin email, please email me. 
 
@@ -2728,7 +2728,7 @@ We are excited to share that we have created a self service customer portal to m
 From this portal you will be able to: 
 View Order Statuses See order historyView Tracking InformationRetrieve IMEI & Sim Information (When applicable)Manage Billing & Shipping AddressesView & download invoicesAnd More! 
 
-Click here to create your user name and password:  https://connectuscorp.com/my-account/?salep-rep=max-mann 
+Click here to create your user name and password:  https://connectuscorp.com/my-account/?sales-rep=max-mann 
 
 Your email will serve as the admin for this account. You can add additional users once you register. If you would like to change the admin email, please email me. 
 
@@ -2755,7 +2755,7 @@ We are excited to share that we have created a self service customer portal to m
 From this portal you will be able to: 
 View Order Statuses See order historyView Tracking InformationRetrieve IMEI & Sim Information (When applicable)Manage Billing & Shipping AddressesView & download invoicesAnd More! 
 
-Click here to create your user name and password:  https://connectuscorp.com/my-account/?salep-rep=dominic-matamis 
+Click here to create your user name and password:  https://connectuscorp.com/my-account/?sales-rep=dominic-matamis 
 
 Your email will serve as the admin for this account. You can add additional users once you register. If you would like to change the admin email, please email me. 
 
@@ -2782,7 +2782,7 @@ We are excited to share that we have created a self service customer portal to m
 From this portal you will be able to: 
 View Order Statuses See order historyView Tracking InformationRetrieve IMEI & Sim Information (When applicable)Manage Billing & Shipping AddressesView & download invoicesAnd More! 
 
-Click here to create your user name and password:  https://connectuscorp.com/my-account/?salep-rep=john-tropeano 
+Click here to create your user name and password:  https://connectuscorp.com/my-account/?sales-rep=john-tropeano 
 
 Your email will serve as the admin for this account. You can add additional users once you register. If you would like to change the admin email, please email me. 
 
@@ -2809,7 +2809,7 @@ We are excited to share that we have created a self service customer portal to m
 From this portal you will be able to: 
 View Order Statuses See order historyView Tracking InformationRetrieve IMEI & Sim Information (When applicable)Manage Billing & Shipping AddressesView & download invoicesAnd More! 
 
-Click here to create your user name and password:  https://connectuscorp.com/my-account/?salep-rep=jerrad-martin 
+Click here to create your user name and password:  https://connectuscorp.com/my-account/?sales-rep=jerrad-martin 
 
 Your email will serve as the admin for this account. You can add additional users once you register. If you would like to change the admin email, please email me. 
 
@@ -3004,6 +3004,13 @@ function loadReps(){
       changed = true;
     }
   }
+  // Repair the salep-rep -> sales-rep link typo in any cached templates.
+  reps.forEach(r => {
+    if(r.template && r.template.includes('salep-rep=')){
+      r.template = r.template.replace(/salep-rep=/g, 'sales-rep=');
+      changed = true;
+    }
+  });
   if(changed) localStorage.setItem(LS_REPS_KEY, JSON.stringify(reps));
   return reps;
 }
@@ -3869,7 +3876,7 @@ function sspInviteBody(rep,company){
 We’re getting your account set up with ConnectUS. Please register in our Self-Service Portal (SSP) so we can finalize your quote/order.
 
 Registration link:
-https://connectuscorp.com/my-account/?salep-rep=${encodeURIComponent((rep||'').toLowerCase().replace(/\s+/g,'-'))}
+https://connectuscorp.com/my-account/?sales-rep=${encodeURIComponent((rep||'').toLowerCase().replace(/\s+/g,'-'))}
 
 Company: ${company||""}
 
@@ -3895,7 +3902,7 @@ function refreshSSPTemplate(){
       .replace(/\{\{\s*Customer First Name\s*\}\}/g, firstName)
       .replace(/\{\{\s*Current Email\s*\}\}/g, custEmail || '(your email)');
     if(rep.slug){
-      body = body.replace(/(my-account\/\?salep-rep=)[^\s]+/g, `$1${rep.slug}`);
+      body = body.replace(/(my-account\/\?sales-rep=)[^\s]+/g, `$1${rep.slug}`);
     }
   }else{
     body = sspInviteBody(repName, (document.getElementById('billCompany').value||''));
