@@ -3004,6 +3004,13 @@ function loadReps(){
       changed = true;
     }
   }
+  // Repair the salep-rep -> sales-rep link typo in any cached templates.
+  reps.forEach(r => {
+    if(r.template && r.template.includes('salep-rep=')){
+      r.template = r.template.replace(/salep-rep=/g, 'sales-rep=');
+      changed = true;
+    }
+  });
   if(changed) localStorage.setItem(LS_REPS_KEY, JSON.stringify(reps));
   return reps;
 }
